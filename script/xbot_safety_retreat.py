@@ -33,20 +33,54 @@ class xbot_retreat():
 
     def __init__(self):
         rospy.init_node('xbot_retreat')
+        self.define()
         self.pub = rospy.Publisher('/cmd_vel_mux/input/safety_controller', Twist, queue_size=1)
         self.pub2 = rospy.Publisher('/replan_path', std_msgs.msg.Bool, queue_size=1)
         rospy.Subscriber("/scan", LaserScan, self.scan_dataCB)
         rospy.Subscriber("/cmd_vel_mux/input/navi", Twist, self.navi_dataCB)
         # rospy.Subscriber("/cmd_retreat", std_msgs.msg.Int32, self.retreat_dataCB)
         #rospy.spin()
-        self.retreat_time = rospy.Duration(3, 0)  # the duration of retreat
-        self.wait_to_retreat_time = rospy.Duration(2, 0)  # time for waiting retreat command
         self.navi_deque = deque(maxlen=10000) #deque to store navi_vel
         self.stopped = False #Flag
         self.retreated = False #Flag   
         rate = rospy.Rate(10) 
         while not rospy.is_shutdown():
             rate.sleep()
+
+
+    def define(self):
+        if not rospy.has_param('~SafeLAng'):
+            rospy.set_param('~SafeLAng', 130)
+        self.SafeLAng = rospy.get_param('~SafeLAng')
+
+        if not rospy.has_param('~SafeRAng'):
+            rospy.set_param('~SafeRAng', 230)
+        self.SafeRAng = rospy.get_param('~SafeRAng')
+
+        if not rospy.has_param('~SafeDist'):
+            rospy.set_param('~SafeDist', 0.5)
+        self.SafeDist = rospy.get_param('~SafeDist')
+
+        if not rospy.has_param('~RetreatTime'):
+            rospy.set_param('~RetreatTime', 4)
+        self.retreat_time = rospy.Duration(rospy.get_param('~RetreatTime'), 0)  # the duration of retreat
+
+        if not rospy.has_param('~WaitToRetreatTime'):
+            rospy.set_param('~WaitToRetreatTime', 3)
+        self.wait_to_retreat_time = rospy.Duration(rospy.get_param('~WaitToRetreatTime'), 0)  # time for waiting retreat command
+
+        print "==========Settings======== "
+        print "SafeAng:  [", self.SafeLAng, ',', self.SafeRAng, ']'
+        print "SafeDist:  ", self.SafeDist
+        print "RetreatTime:  ", self.retreat_time.to_sec()
+        print "WaitToRetreatTime:  ", self.wait_to_retreat_time.to_sec()
+
+    def clear(self):
+        rospy.delete_param('~SafeLAng')
+        rospy.delete_param('~SafeRAng')
+        rospy.delete_param('~SafeDist')    
+        rospy.delete_param('~RetreatTime')
+        rospy.delete_param('~WaitToRetreatTime')     
 
     def is_danger(self,scan_data):
         if min(scan_data.ranges[120:240] ) < 0.5:return True;
@@ -117,7 +151,8 @@ class xbot_retreat():
 if __name__ == '__main__':
     try:
         rospy.loginfo("initialization system")
-        xbot_retreat()
+        x = xbot_retreat()
+        x.clear()
         rospy.loginfo("process done and quit")
     except rospy.ROSInterruptException:
         rospy.loginfo("xbot_retreat terminated.")
