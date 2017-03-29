@@ -89,11 +89,6 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the "generate_dynamic_reconfigure_options" section below
 ##     and list every .cfg file to be processed
 
-## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
 
 ###################################
 ## catkin specific configuration ##
@@ -206,3 +201,6 @@ add_executable(xbot_obstacle_avoidance src/xbot_obstacle_avoidance.cpp)
 target_link_libraries(xbot_obstacle_avoidance ${catkin_LIBRARIES})
 add_dependencies(xbot_obstacle_avoidance xbot_obstacle_avoidance_generate_messages_cpp)
 
+add_executable(xbot_danger src/xbot_danger.cpp)
+target_link_libraries(xbot_danger ${catkin_LIBRARIES})
+add_dependencies(xbot_danger xbot_obstacle_avoidance_generate_messages_cpp)
