@@ -40,7 +40,7 @@ class xbot_retreat():
         rospy.Subscriber("/cmd_vel_mux/input/navi", Twist, self.navi_dataCB)
         # rospy.Subscriber("/cmd_retreat", std_msgs.msg.Int32, self.retreat_dataCB)
         #rospy.spin()
-        self.navi_deque = deque(maxlen=10000) #deque to store navi_vel
+        self.navi_deque = deque(maxlen=1000) #deque to store navi_vel
         self.stopped = False #Flag
         self.retreated = False #Flag   
         rate = rospy.Rate(10) 
@@ -83,7 +83,7 @@ class xbot_retreat():
         rospy.delete_param('~WaitToRetreatTime')     
 
     def is_danger(self,scan_data):
-        if min(scan_data.ranges[120:240] ) < 0.5:return True;
+        if min(scan_data.ranges[self.SafeLAng:self.SafeRAng] ) < self.SafeDist:return True;
         return False;
 
     def scan_dataCB(self, scan_data):
@@ -105,7 +105,8 @@ class xbot_retreat():
                 self.stopped = True
         else:
             if self.retreated == True:#when xbot just retreated, request navigation to replan path
-                self.pub2.publish(True)
+                for i in range(10):
+                    self.pub2.publish(True)
             print 'move'
             self.retreated = False
             self.stopped = False

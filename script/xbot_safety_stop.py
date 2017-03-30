@@ -48,7 +48,7 @@ class xbot_safety_stop():
         rospy.delete_param('~WaitToRetreatTime')     
 
     def is_danger(self, scan_data):
-        if min(scan_data.ranges[self.SafeLAng:self.SafeRAng]) < 0.5:
+        if min(scan_data.ranges[self.SafeLAng:self.SafeRAng]) < self.SafeDist:
             return True
         return False
 

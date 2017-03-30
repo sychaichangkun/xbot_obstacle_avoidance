@@ -1,11 +1,11 @@
 <launch>
-    <arg name="SafeLAng"                default='135' />
-    <arg name="SafeRAng"             	default='245' />
+    <arg name="SafeLAng"                default='130' />
+    <arg name="SafeRAng"             	default='230' />
     <arg name="SafeDist"                default='0.5' />
     <arg name="RetreatTime"             default='2' />
     <arg name="WaitToRetreatTime"       default='2' />
 
-    <node pkg="xbot_obstacle_avoidance" type="xbot_safety_retreat.py" respawn="true" name="safety_stop" output="screen">
+    <node pkg="xbot_obstacle_avoidance" type="xbot_safety_stop.py" respawn="true" name="safety_stop" output="screen">
         <param name="SafeLAng"  	value="$(arg SafeLAng)" />
         <param name="SafeRAng"    	value="$(arg SafeRAng)" />
         <param name="SafeDist"     	value="$(arg SafeDist)" />
