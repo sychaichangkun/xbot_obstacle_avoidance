@@ -12,7 +12,7 @@ from xbot_msgs.msg import DockInfraRed
 from sensor_msgs.msg import LaserScan
 from collections import deque
 
-
+inf = 10000
 class xbot_FSM():
     """
     xbot Finite-State Machine
@@ -24,7 +24,7 @@ class xbot_FSM():
 
     def __init__(self):
         rospy.init_node('xbot_FSM')
-        self.state = ('Waiting', rospy.Time.now())
+        self.state = ('Advancing', rospy.Time.now())
         print rospy.Time.now()
         self.danger = False
         self.navi_deque = deque(maxlen=1000)
@@ -34,11 +34,13 @@ class xbot_FSM():
 
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
-            self.StateTransition(self.state)
+            self.StateTransition()
+
             rate.sleep()
 
-    def StateTransition(self,state):
-        (action, time) = state
+    def StateTransition(self):
+        (action, time) = self.state
+        print  (action, time)
         if action =="Advancing":
             if self.danger:
                 self.Advancing2Stopped()
@@ -67,23 +69,24 @@ class xbot_FSM():
         self.state = ('Advancing',rospy.Time.now())
         self.AdvancingAction()
     def StopTimeExceeded(self, time):
-        return True if rospy.Time.now() - time > 10000111 else False
+        print rospy.Time.now() - time
+        return True if rospy.Time.now() - time > rospy.Duration(2) else False
     def Stopped2Retreating(self):
         self.state = ('Retreating',rospy.Time.now())
         self.RetreatingAction()
     def StoppedAction(self):
         self.pub.publish(Twist())
     def Retreating2Advancing(self):
-        self.state = ('Retreating',rospy.Time.now())
+        self.state = ('Advancing',rospy.Time.now())
         #publish replan path request
         self.AdvancingAction()
     def RetreatingAction(self):
-        if len(navi_deque)>0:
-            self.pub2.publish(reverse_vel(navi_deque.pop()))
+        if len(self.navi_deque)>0:
+            self.pub.publish(reverse_vel(self.navi_deque.pop()))
 
 
     def navi_dataCB(self, navi_data):
-        if not self.stopped:
+        if self.state[0] == 'Advancing':
             self.navi_deque.append(navi_data)
 
 
