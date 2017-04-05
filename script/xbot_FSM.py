@@ -7,8 +7,7 @@ xbot_FSM.py
 
 import rospy
 import std_msgs.msg
-from geometry_msgs.msg import Twist
-from xbot_msgs.msg import DockInfraRed
+import xbot_EventAction as fsm
 from sensor_msgs.msg import LaserScan
 from collections import deque
 
@@ -16,18 +15,20 @@ inf = 10000
 class xbot_FSM():
     """
     xbot Finite-State Machine
-    States:(action, time)
-    Actions:'Advancing', 'Stopped', 'Retreating',
-    When specific event is triggered, xbot state will transform 
+
+    states: (statename, time)
+    states include 'Advancing', 'Stopped', 'Retreating', #'Waiting'(potential)
+    use 'A','S','R' for simplicity
+
+    When specific event is triggered, xbot will transform
     from current state to another, with some actions performed
     """
 
     def __init__(self):
         rospy.init_node('xbot_FSM')
         self.state = ('Advancing', rospy.Time.now())
-        print rospy.Time.now()
-        self.danger = False
-        self.navi_deque = deque(maxlen=1000)
+        self.danger = False                                                 #whether obstacle in safety area or not
+        self.navi_deque = deque(maxlen=1000)                #a deque of the path(velocity) just moved   
         self.pub = rospy.Publisher('/cmd_vel_mux/input/safety_controller', Twist, queue_size=1)
         rospy.Subscriber("/scan", LaserScan, self.scan_dataCB)
         rospy.Subscriber("/cmd_vel_mux/input/navi", Twist, self.navi_dataCB)
@@ -35,54 +36,29 @@ class xbot_FSM():
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
             self.StateTransition()
-
             rate.sleep()
 
     def StateTransition(self):
-        (action, time) = self.state
-        print  (action, time)
-        if action =="Advancing":
-            if self.danger:
-                self.Advancing2Stopped()
+        (statename, time) = self.state
+        print  'current state: ', (statename, time)
+        if statename =="Advancing":
+            if fsm.A2S_Event(self):       
+                fsm.A2S_Action(self)
             else:
-                self.AdvancingAction()
-        elif action == "Stopped":
-            if not self.danger: 
-                self.Stopped2Advancing()
-            elif self.StopTimeExceeded(time):
-                self.Stopped2Retreating()
+                fsm.Advancing_Action(self)
+        elif statename == "Stopped":
+            if fsm.S2A_Event(self):     
+                fsm.S2A_Action(self)
+            elif fsm.S2R_Event(self):
+                fsm.S2R_Action(self)
             else:
-                self.StoppedAction()
-        elif action == "Retreating":
-            if not self.danger:
-                self.Retreating2Advancing()
+                fsm.Stopped_Action(self)
+        elif statename == "Retreating":
+            if fsm.R2A_Event(self):                  
+                fsm.R2A_Action(self)
             else:
-                self.RetreatingAction()
+                fsm.Retreating_Action(self)
 
-
-    def Advancing2Stopped(self):
-        self.state = ('Stopped',rospy.Time.now())
-        self.pub.publish(Twist())
-    def AdvancingAction(self):
-        pass
-    def Stopped2Advancing(self):
-        self.state = ('Advancing',rospy.Time.now())
-        self.AdvancingAction()
-    def StopTimeExceeded(self, time):
-        print rospy.Time.now() - time
-        return True if rospy.Time.now() - time > rospy.Duration(2) else False
-    def Stopped2Retreating(self):
-        self.state = ('Retreating',rospy.Time.now())
-        self.RetreatingAction()
-    def StoppedAction(self):
-        self.pub.publish(Twist())
-    def Retreating2Advancing(self):
-        self.state = ('Advancing',rospy.Time.now())
-        #publish replan path request
-        self.AdvancingAction()
-    def RetreatingAction(self):
-        if len(self.navi_deque)>0:
-            self.pub.publish(reverse_vel(self.navi_deque.pop()))
 
 
     def navi_dataCB(self, navi_data):
@@ -95,15 +71,6 @@ class xbot_FSM():
             self.danger = True
         else:
             self.danger = False
-
-def reverse_vel(vel):
-    vel.linear.x = -vel.linear.x 
-    vel.linear.y = -vel.linear.y 
-    vel.linear.z = -vel.linear.z 
-    vel.angular.x = -vel.angular.x 
-    vel.angular.y = -vel.angular.y 
-    vel.angular.z = -vel.angular.z 
-    return vel
 
 
 
