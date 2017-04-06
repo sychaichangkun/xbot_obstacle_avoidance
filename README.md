@@ -12,6 +12,7 @@ published topics:
     /cmd_vel_mux/input/safety_controller
 
 run xbot_obstacle_avoidance.launch
+
     ```bash
     roslaunch xbot_obstacle_avoidance xbot_obstacle_avoidance.launch
     ```
