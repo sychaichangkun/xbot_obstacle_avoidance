@@ -5,7 +5,7 @@
     <arg name="RetreatTime"             default='2' />
     <arg name="WaitToRetreatTime"       default='2' />
 
-    <node pkg="xbot_obstacle_avoidance" type="xbot_safety_stop.py" respawn="true" name="safety_stop" output="screen">
+    <node pkg="xbot_obstacle_avoidance" type="xbot_FSM.py" respawn="true" name="xbot_finite_state_machine" output="screen">
         <param name="SafeLAng"  	value="$(arg SafeLAng)" />
         <param name="SafeRAng"    	value="$(arg SafeRAng)" />
         <param name="SafeDist"     	value="$(arg SafeDist)" />

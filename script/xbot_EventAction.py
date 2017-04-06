@@ -6,32 +6,32 @@ xbot_EventAction.py
 import rospy
 from geometry_msgs.msg import Twist
 
-def Advancing_Action(xbot_obj):
+def Advance_Action(xbot_obj):
     pass
 
-def Stopped_Action(xbot_obj):
+def Stop_Action(xbot_obj):
     xbot_obj.pub.publish(Twist())
 
-def Retreating_Action(xbot_obj):
+def Retreat_Action(xbot_obj):
     if len(xbot_obj.navi_deque) > 0:
         xbot_obj.pub.publish(reverse_vel(xbot_obj.navi_deque.pop()))
 
 def A2S_Action(xbot_obj):
-    xbot_obj.state = ('Stopped', rospy.Time.now())
-    xbot_obj.Stopped_Action()
+    xbot_obj.state = ('Stop', rospy.Time.now())
+    Stop_Action(xbot_obj)
 
 def S2A_Action(xbot_obj):
-    xbot_obj.state = ('Advancing', rospy.Time.now())
-    xbot_obj.Advancing_Action()
+    xbot_obj.state = ('Advance', rospy.Time.now())
+    Advance_Action(xbot_obj)
 
 def S2R_Action(xbot_obj):
-    xbot_obj.state = ('Retreating', rospy.Time.now())
-    xbot_obj.Retreating_Action()
+    xbot_obj.state = ('Retreat', rospy.Time.now())
+    Retreat_Action(xbot_obj)
 
 def R2A_Action(xbot_obj):
-    xbot_obj.state = ('Advancing', rospy.Time.now())
+    xbot_obj.state = ('Advance', rospy.Time.now())
     # publish replan path request
-    xbot_obj.Advancing_Action()
+    Advance_Action(xbot_obj)
 
 def A2S_Event(xbot_obj):
     return True if xbot_obj.danger else False
@@ -43,12 +43,44 @@ def R2A_Event(xbot_obj):
     return True if not xbot_obj.danger else False
 
 def S2R_Event(xbot_obj):
-    stoppedtime = xbot_obj.state[1]
-    print rospy.Time.now() - stoppedtime
-    return True if rospy.Time.now() - stoppedtime > rospy.Duration(2) else False
+    stoptime = xbot_obj.state[1]
+    print rospy.Time.now() - stoptime
+    return True if rospy.Time.now() - stoptime > xbot_obj.wait_to_retreat_time else False
 
 
+def define(xbot_obj):
+    if not rospy.has_param('~SafeLAng'):
+        rospy.set_param('~SafeLAng', 130)
+    xbot_obj.SafeLAng = rospy.get_param('~SafeLAng')
 
+    if not rospy.has_param('~SafeRAng'):
+        rospy.set_param('~SafeRAng', 230)
+    xbot_obj.SafeRAng = rospy.get_param('~SafeRAng')
+
+    if not rospy.has_param('~SafeDist'):
+        rospy.set_param('~SafeDist', 0.5)
+    xbot_obj.SafeDist = rospy.get_param('~SafeDist')
+
+    if not rospy.has_param('~RetreatTime'):
+        rospy.set_param('~RetreatTime', 4)
+    xbot_obj.retreat_time = rospy.Duration(rospy.get_param('~RetreatTime'), 0)  # the duration of retreat
+
+    if not rospy.has_param('~WaitToRetreatTime'):
+        rospy.set_param('~WaitToRetreatTime', 3)
+    xbot_obj.wait_to_retreat_time = rospy.Duration(rospy.get_param('~WaitToRetreatTime'), 0)  # time for waiting retreat command
+
+    print "==========Settings======== "
+    print "SafeAng:  [", xbot_obj.SafeLAng, ',', xbot_obj.SafeRAng, ']'
+    print "SafeDist:  ", xbot_obj.SafeDist
+    print "RetreatTime:  ", xbot_obj.retreat_time.to_sec()
+    print "WaitToRetreatTime:  ", xbot_obj.wait_to_retreat_time.to_sec()
+
+def clear(self):
+    rospy.delete_param('~SafeLAng')
+    rospy.delete_param('~SafeRAng')
+    rospy.delete_param('~SafeDist')    
+    rospy.delete_param('~RetreatTime')
+    rospy.delete_param('~WaitToRetreatTime')     
 
 
 def reverse_vel(vel):
