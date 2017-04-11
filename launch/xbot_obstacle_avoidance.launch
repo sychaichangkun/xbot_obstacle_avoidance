@@ -1,14 +1,16 @@
 <launch>
     <arg name="SafeLAng"                default='130' />
     <arg name="SafeRAng"             	default='230' />
-    <arg name="SafeDist"                default='0.5' />
-    <arg name="RetreatTime"             default='2' />
-    <arg name="WaitToRetreatTime"       default='2' />
+    <arg name="SafeDistMax"                default='0.55' />
+    <arg name="SafeDistMin"                default='0.3' />
+    <arg name="RetreatTime"             default='2.0' />
+    <arg name="WaitToRetreatTime"       default='2.0' />
 
-    <node pkg="xbot_obstacle_avoidance" type="xbot_FSM.py" respawn="true" name="xbot_finite_state_machine" output="screen">
+    <node pkg="xbot_obstacle_avoidance" type="xbot_FSM.py" respawn="true" name="xbot_state_machine" output="screen">
         <param name="SafeLAng"  	value="$(arg SafeLAng)" />
         <param name="SafeRAng"    	value="$(arg SafeRAng)" />
-        <param name="SafeDist"     	value="$(arg SafeDist)" />
+        <param name="SafeDistMax"     	value="$(arg SafeDistMax)" />
+        <param name="SafeDistMin"     	value="$(arg SafeDistMin)" />
         <param name="RetreatTime"    	value="$(arg RetreatTime)" />
         <param name="WaitToRetreatTime" value="$(arg WaitToRetreatTime)" />
 

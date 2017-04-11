@@ -44,7 +44,6 @@ def R2A_Event(xbot_obj):
 
 def S2R_Event(xbot_obj):
     stoptime = xbot_obj.state[1]
-    print rospy.Time.now() - stoptime
     return True if rospy.Time.now() - stoptime > xbot_obj.wait_to_retreat_time else False
 
 
@@ -57,28 +56,33 @@ def define(xbot_obj):
         rospy.set_param('~SafeRAng', 230)
     xbot_obj.SafeRAng = rospy.get_param('~SafeRAng')
 
-    if not rospy.has_param('~SafeDist'):
-        rospy.set_param('~SafeDist', 0.5)
-    xbot_obj.SafeDist = rospy.get_param('~SafeDist')
+    if not rospy.has_param('~SafeDistMin'):
+        rospy.set_param('~SafeDistMin', 0.3)
+    xbot_obj.SafeDistMin = rospy.get_param('~SafeDistMin')
+
+    if not rospy.has_param('~SafeDistMax'):
+        rospy.set_param('~SafeDistMax', 0.5)
+    xbot_obj.SafeDistMax = rospy.get_param('~SafeDistMax')
 
     if not rospy.has_param('~RetreatTime'):
-        rospy.set_param('~RetreatTime', 4)
-    xbot_obj.retreat_time = rospy.Duration(rospy.get_param('~RetreatTime'), 0)  # the duration of retreat
+        rospy.set_param('~RetreatTime', 4.0)
+    xbot_obj.retreat_time = rospy.Duration.from_sec(rospy.get_param('~RetreatTime'))  # the duration of retreat
 
     if not rospy.has_param('~WaitToRetreatTime'):
-        rospy.set_param('~WaitToRetreatTime', 3)
-    xbot_obj.wait_to_retreat_time = rospy.Duration(rospy.get_param('~WaitToRetreatTime'), 0)  # time for waiting retreat command
+        rospy.set_param('~WaitToRetreatTime', 3.0)
+    xbot_obj.wait_to_retreat_time = rospy.Duration.from_sec(rospy.get_param('~WaitToRetreatTime'))  # time for waiting retreat command
 
     print "==========Settings======== "
     print "SafeAng:  [", xbot_obj.SafeLAng, ',', xbot_obj.SafeRAng, ']'
-    print "SafeDist:  ", xbot_obj.SafeDist
+    print "SafeDist:  [", xbot_obj.SafeDistMin, ',', xbot_obj.SafeDistMax, ']'
     print "RetreatTime:  ", xbot_obj.retreat_time.to_sec()
     print "WaitToRetreatTime:  ", xbot_obj.wait_to_retreat_time.to_sec()
 
 def clear(self):
     rospy.delete_param('~SafeLAng')
     rospy.delete_param('~SafeRAng')
-    rospy.delete_param('~SafeDist')    
+    rospy.delete_param('~SafeDistMax')   
+    rospy.delete_param('~SafeDistMin')    
     rospy.delete_param('~RetreatTime')
     rospy.delete_param('~WaitToRetreatTime')     
 
